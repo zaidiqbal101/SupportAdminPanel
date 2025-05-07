@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
-const Support = ({ tickets }) => {
+const Support = ({ tickets: initialTickets = [] }) => {
   const [formData, setFormData] = useState({
     department: '',
     priority: '',
@@ -8,26 +28,44 @@ const Support = ({ tickets }) => {
   });
   const [options, setOptions] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [statusDialog, setStatusDialog] = useState({
+    open: false,
+    ticketId: null,
+    status: '',
+    message: '',
+  });
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [tickets, setTickets] = useState(initialTickets);
 
-  // Fetch dynamic options on component mount
   useEffect(() => {
-    fetchOptions();
-  }, []);
+    let isMounted = true;
 
-  const fetchOptions = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/dynamicoptions');
-      const data = await response.json();
-      setOptions(data);
-    } catch (error) {
-      setMessage('Failed to load options.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchOptions = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('/api/dynamicoptions');
+        if (isMounted) {
+          setOptions(Array.isArray(response.data) ? response.data : []);
+        }
+      } catch (error) {
+        if (isMounted) {
+          toast.error(`Failed to load options: ${error.response?.data?.message || error.message}`);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchOptions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -36,170 +74,222 @@ const Support = ({ tickets }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
+    setSubmitLoading(true);
     try {
       const url = editingId ? `/api/dynamicoptions/${editingId}` : '/api/dynamicoptions';
-      const method = editingId ? 'PUT' : 'POST';
-      const response = await fetch(url, {
+      const method = editingId ? 'put' : 'post';
+      await axios({
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        url,
+        data: formData,
       });
-
-      if (response.ok) {
-        setMessage(editingId ? 'Option updated successfully!' : 'Option added successfully!');
-        setFormData({ department: '', priority: '', services: '' });
-        setEditingId(null);
-        fetchOptions();
-      } else {
-        setMessage('Failed to save option. Please try again.');
-      }
+      toast.success(editingId ? 'Option updated successfully!' : 'Option added successfully!');
+      setFormData({ department: '', priority: '', services: '' });
+      setEditingId(null);
+      await fetchOptions();
     } catch (error) {
-      setMessage('An error occurred. Please try again.');
+      toast.error(`Error saving option: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
   const handleEdit = (option) => {
     setFormData({
-      department: option.department,
-      priority: option.priority,
-      services: option.services,
+      department: option.department || '',
+      priority: option.priority || '',
+      services: option.services || '',
     });
     setEditingId(option.id);
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this option?')) return;
+    if (!window.confirm('Are you sure you want to delete this option?')) return;
     try {
-      const response = await fetch(`/api/dynamicoptions/${id}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        setMessage('Option deleted successfully!');
-        fetchOptions();
-      } else {
-        setMessage('Failed to delete option.');
-      }
+      await axios.delete(`/api/dynamicoptions/${id}`);
+      toast.success('Option deleted successfully!');
+      await fetchOptions();
     } catch (error) {
-      setMessage('An error occurred. Please try again.');
+      toast.error(`Error deleting option: ${error.response?.data?.message || error.message}`);
     }
   };
 
-  return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Support Tickets</h1>
+  const handleStatusChange = (ticketId, value) => {
+    setStatusDialog({
+      open: true,
+      ticketId,
+      status: value,
+      message: '',
+    });
+  };
 
-      {/* Form for adding/editing dynamic options */}
-      <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">{editingId ? 'Edit Option' : 'Add New Option'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+  const fetchOptions = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/dynamicoptions');
+      setOptions(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      toast.error(`Failed to load options: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateTicketStatus = async (ticketId, status, statusMessage) => {
+    setStatusLoading(true);
+    try {
+      const response = await axios.put(`/tickets/${ticketId}/status`, {
+        status,
+        statusMessage,
+      });
+      const updatedTicket = response.data.ticket;
+      setTickets((prev) =>
+        prev.map((ticket) =>
+          ticket.id === ticketId ? { ...ticket, status, message: statusMessage } : ticket
+        )
+      );
+      toast.success(`Ticket marked as ${status} successfully!`);
+    } catch (error) {
+      toast.error(`Failed to update ticket status: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  const handleStatusDialogSubmit = () => {
+    if (!statusDialog.message.trim()) {
+      toast.error('Please provide a reason for the status change.');
+      return;
+    }
+    updateTicketStatus(statusDialog.ticketId, statusDialog.status, statusDialog.message);
+    setStatusDialog({ open: false, ticketId: null, status: '', message: '' });
+  };
+
+  const handleCancelEdit = () => {
+    setFormData({ department: '', priority: '', services: '' });
+    setEditingId(null);
+  };
+
+  return (
+    <div className="container mx-auto p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Support Tickets</h1>
+
+      <div className="mb-12 bg-white p-8 rounded-xl shadow-lg">
+        <h2 className="text-2xl font-semibold text-gray-700 mb-6">
+          {editingId ? 'Edit Option' : 'Add New Option'}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Department</label>
-            <input
+            <label htmlFor="department" className="block text-sm font-medium text-gray-600">
+              Department
+            </label>
+            <Input
+              id="department"
               type="text"
               name="department"
               value={formData.department}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Priority</label>
-            <input
+            <label htmlFor="priority" className="block text-sm font-medium text-gray-600">
+              Priority
+            </label>
+            <Input
+              id="priority"
               type="text"
               name="priority"
               value={formData.priority}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Services</label>
-            <textarea
+            <label htmlFor="services" className="block text-sm font-medium text-gray-600">
+              Services
+            </label>
+            <Textarea
+              id="services"
               name="services"
               value={formData.services}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-              rows="4"
+              className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
+              rows={4}
               required
-            ></textarea>
+            />
           </div>
           <div className="flex space-x-4">
-            <button
+            <Button
               type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              disabled={submitLoading}
             >
-              {editingId ? 'Update Option' : 'Add Option'}
-            </button>
+              {submitLoading ? 'Saving...' : editingId ? 'Update Option' : 'Add Option'}
+            </Button>
             {editingId && (
-              <button
+              <Button
                 type="button"
-                onClick={() => {
-                  setFormData({ department: '', priority: '', services: '' });
-                  setEditingId(null);
-                }}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring focus:ring-gray-500 focus:ring-opacity-50"
+                variant="secondary"
+                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition"
+                onClick={handleCancelEdit}
+                disabled={submitLoading}
               >
                 Cancel
-              </button>
+              </Button>
             )}
           </div>
-          {message && (
-            <p className={`mt-2 text-sm ${message.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
-              {message}
-            </p>
-          )}
         </form>
       </div>
 
-      {/* Table for displaying dynamic options */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Dynamic Options</h2>
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-700 mb-6">Dynamic Options</h2>
         {loading ? (
-          <p>Loading options...</p>
+          <p className="text-gray-500">Loading options...</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl shadow-lg">
             <table className="min-w-full bg-white border border-gray-200">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="py-2 px-4 border-b text-left">ID</th>
-                  <th className="py-2 px-4 border-b text-left">Department</th>
-                  <th className="py-2 px-4 border-b text-left">Priority</th>
-                  <th className="py-2 px-4 border-b text-left">Services</th>
-                  <th className="py-2 px-4 border-b text-left">Actions</th>
+                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">ID</th>
+                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Department</th>
+                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Priority</th>
+                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Services</th>
+                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {options && options.length > 0 ? (
+                {options.length > 0 ? (
                   options.map((option) => (
-                    <tr key={option.id} className="hover:bg-gray-50">
-                      <td className="py-2 px-4 border-b">{option.id}</td>
-                      <td className="py-2 px-4 border-b">{option.department}</td>
-                      <td className="py-2 px-4 border-b">{option.priority}</td>
-                      <td className="py-2 px-4 border-b">{option.services}</td>
-                      <td className="py-2 px-4 border-b">
-                        <button
+                    <tr key={option.id} className="hover:bg-gray-50 transition">
+                      <td className="py-3 px-6 border-b text-gray-700">{option.id}</td>
+                      <td className="py-3 px-6 border-b text-gray-700">{option.department || 'N/A'}</td>
+                      <td className="py-3 px-6 border-b text-gray-700">{option.priority || 'N/A'}</td>
+                      <td className="py-3 px-6 border-b text-gray-700">{option.services || 'N/A'}</td>
+                      <td className="py-3 px-6 border-b">
+                        <Button
+                          variant="link"
                           onClick={() => handleEdit(option)}
-                          className="text-blue-500 hover:underline mr-4"
+                          className="text-blue-600 hover:text-blue-800 mr-4"
                         >
                           Edit
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="link"
                           onClick={() => handleDelete(option.id)}
-                          className="text-red-500 hover:underline"
+                          className="text-red-600 hover:text-red-800"
                         >
                           Delete
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="py-2 px-4 text-center">
+                    <td colSpan="5" className="py-3 px-6 text-center text-gray-500">
                       No options found
                     </td>
                   </tr>
@@ -210,37 +300,38 @@ const Support = ({ tickets }) => {
         )}
       </div>
 
-      {/* Existing ticket table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl shadow-lg">
+        <h2 className="text-2xl font-semibold text-gray-700 mb-6">Tickets</h2>
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b text-left">ID</th>
-              <th className="py-2 px-4 border-b text-left">Subject</th>
-              <th className="py-2 px-4 border-b text-left">Department</th>
-              <th className="py-2 px-4 border-b text-left">Priority</th>
-              <th className="py-2 px-4 border-b text-left">Service</th>
-              <th className="py-2 px-4 border-b text-left">Body</th>
-              <th className="py-2 px-4 border-b text-left">Attachment</th>
-              <th className="py-2 px-4 border-b text-left">Created At</th>
-              <th className="py-2 px-4 border-b text-left">Updated At</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">ID</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Subject</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Department</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Priority</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Service</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Body</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Attachment</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Status</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Created At</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Updated At</th>
             </tr>
           </thead>
           <tbody>
-            {tickets && tickets.length > 0 ? (
+            {tickets.length > 0 ? (
               tickets.map((ticket) => (
-                <tr key={ticket.id} className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">{ticket.id}</td>
-                  <td className="py-2 px-4 border-b">{ticket.subject}</td>
-                  <td className="py-2 px-4 border-b">{ticket.department}</td>
-                  <td className="py-2 px-4 border-b">{ticket.priority}</td>
-                  <td className="py-2 px-4 border-b">{ticket.service}</td>
-                  <td className="py-2 px-4 border-b">{ticket.body}</td>
-                  <td className="py-2 px-4 border-b">
+                <tr key={ticket.id} className="hover:bg-gray-50 transition">
+                  <td className="py-3 px-6 border-b text-gray-700">{ticket.id}</td>
+                  <td className="py-3 px-6 border-b text-gray-700">{ticket.subject || 'N/A'}</td>
+                  <td className="py-3 px-6 border-b text-gray-700">{ticket.department || 'N/A'}</td>
+                  <td className="py-3 px-6 border-b text-gray-700">{ticket.priority || 'N/A'}</td>
+                  <td className="py-3 px-6 border-b text-gray-700">{ticket.service || 'N/A'}</td>
+                  <td className="py-3 px-6 border-b text-gray-700">{ticket.body || 'N/A'}</td>
+                  <td className="py-3 px-6 border-b">
                     {ticket.attachment ? (
                       <a
                         href={ticket.attachment}
-                        className="text-blue-500 hover:underline"
+                        className="text-blue-600 hover:underline"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -250,17 +341,32 @@ const Support = ({ tickets }) => {
                       'None'
                     )}
                   </td>
-                  <td className="py-2 px-4 border-b">
-                    {new Date(ticket.created_at).toLocaleString()}
+                  <td className="py-3 px-6 border-b">
+                    <Select
+                      value={ticket.status || 'pending'}
+                      onValueChange={(value) => handleStatusChange(ticket.id, value)}
+                    >
+                      <SelectTrigger className="w-[140px] rounded-lg border-gray-200">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="canceled">Canceled</SelectItem>
+                        <SelectItem value="complete">Complete</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </td>
-                  <td className="py-2 px-4 border-b">
-                    {new Date(ticket.updated_at).toLocaleString()}
+                  <td className="py-3 px-6 border-b text-gray-700">
+                    {ticket.created_at ? new Date(ticket.created_at).toLocaleString() : 'N/A'}
+                  </td>
+                  <td className="py-3 px-6 border-b text-gray-700">
+                    {ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : 'N/A'}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="9" className="py-2 px-4 text-center">
+                <td colSpan="10" className="py-3 px-6 text-center text-gray-500">
                   No tickets found
                 </td>
               </tr>
@@ -268,6 +374,60 @@ const Support = ({ tickets }) => {
           </tbody>
         </table>
       </div>
+
+      <Dialog
+        open={statusDialog.open}
+        onOpenChange={(open) =>
+          setStatusDialog({ ...statusDialog, open, message: open ? statusDialog.message : '' })
+        }
+      >
+        <DialogContent className="sm:max-w-[500px] rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-gray-800">
+              Update Ticket Status
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-600">
+                Status: <span className="capitalize">{statusDialog.status || 'N/A'}</span>
+              </label>
+            </div>
+            <div>
+              <label htmlFor="statusMessage" className="block text-sm font-medium text-gray-600">
+                Reason for status change
+              </label>
+              <Textarea
+                id="statusMessage"
+                value={statusDialog.message}
+                onChange={(e) => setStatusDialog({ ...statusDialog, message: e.target.value })}
+                placeholder="Enter your reason for the status change..."
+                rows={5}
+                className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-end">
+            <Button
+              variant="secondary"
+              className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition"
+              onClick={() =>
+                setStatusDialog({ open: false, ticketId: null, status: '', message: '' })
+              }
+              disabled={statusLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              onClick={handleStatusDialogSubmit}
+              disabled={statusLoading}
+            >
+              {statusLoading ? 'Sending...' : 'Send'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

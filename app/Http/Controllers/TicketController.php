@@ -25,6 +25,48 @@ class TicketController extends Controller
         return response()->json($options);
     }
 
+    public function updateStatus(Request $request, $ticketId)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|string|in:pending,canceled,complete',
+            'statusMessage' => 'required|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Find the ticket
+        $ticket = TicketForm::find($ticketId);
+
+        if (!$ticket) {
+            return response()->json([
+                'message' => 'Ticket not found',
+            ], 404);
+        }
+
+        try {
+            // Update the ticket
+            $ticket->update([
+                'status' => $request->input('status'),
+                'message' => $request->input('statusMessage'),
+            ]);
+
+            return response()->json([
+                'message' => 'Ticket status updated successfully',
+                'ticket' => $ticket,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update ticket status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     // Method to store a new dynamic option
     public function storeDynamicOption(Request $request)
     {

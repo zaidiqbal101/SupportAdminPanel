@@ -14,6 +14,8 @@ class TicketForm extends Model
         'service',
         'body',
         'attachment',
+        'status',
+        'message'
     ];
     public $timestamps = true;
 }
