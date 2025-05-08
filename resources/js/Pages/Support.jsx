@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import Navbar from '@/Components/Navbar';
 import {
   Select,
   SelectContent,
@@ -38,6 +39,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
   });
   const [statusLoading, setStatusLoading] = useState(false);
   const [tickets, setTickets] = useState(initialTickets);
+  const [isFormOpen, setIsFormOpen] = useState(false); // State for collapsible form
 
   useEffect(() => {
     let isMounted = true;
@@ -86,6 +88,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
       toast.success(editingId ? 'Option updated successfully!' : 'Option added successfully!');
       setFormData({ department: '', priority: '', services: '' });
       setEditingId(null);
+      setIsFormOpen(false); // Close form after submit
       await fetchOptions();
     } catch (error) {
       toast.error(`Error saving option: ${error.response?.data?.message || error.message}`);
@@ -101,6 +104,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
       services: option.services || '',
     });
     setEditingId(option.id);
+    setIsFormOpen(true); // Open form when editing
   };
 
   const handleDelete = async (id) => {
@@ -168,81 +172,94 @@ const Support = ({ tickets: initialTickets = [] }) => {
   const handleCancelEdit = () => {
     setFormData({ department: '', priority: '', services: '' });
     setEditingId(null);
+    setIsFormOpen(false); // Close form on cancel
   };
 
   return (
+    <>
+    <Navbar />
     <div className="container mx-auto p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Support Tickets</h1>
 
-      <div className="mb-12 bg-white p-8 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-6">
-          {editingId ? 'Edit Option' : 'Add New Option'}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="department" className="block text-sm font-medium text-gray-600">
-              Department
-            </label>
-            <Input
-              id="department"
-              type="text"
-              name="department"
-              value={formData.department}
-              onChange={handleInputChange}
-              className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
-              required
-            />
+      <div className="mb-12">
+        <Button
+          onClick={() => setIsFormOpen(!isFormOpen)}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition mb-4"
+        >
+          {isFormOpen ? 'Hide Form' : 'Add New Option'}
+        </Button>
+        {isFormOpen && (
+          <div className="bg-white p-8 rounded-xl shadow-lg transition-all duration-300">
+            <h2 className="text-2xl font-semibold text-gray-700 mb-6">
+              {editingId ? 'Edit Option' : 'Add New Option'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="department" className="block text-sm font-medium text-gray-600">
+                  Department
+                </label>
+                <Input
+                  id="department"
+                  type="text"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="priority" className="block text-sm font-medium text-gray-600">
+                  Priority
+                </label>
+                <Input
+                  id="priority"
+                  type="text"
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleInputChange}
+                  className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="services" className="block text-sm font-medium text-gray-600">
+                  Services
+                </label>
+                <Textarea
+                  id="services"
+                  name="services"
+                  value={formData.services}
+                  onChange={handleInputChange}
+                  className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
+                  rows={4}
+                  required
+                />
+              </div>
+              <div className="flex space-x-4">
+                <Button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                  disabled={submitLoading}
+                >
+                  {submitLoading ? 'Saving...' : editingId ? 'Update Option' : 'Add Option'}
+                </Button>
+                {editingId && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition"
+                    onClick={handleCancelEdit}
+                    disabled={submitLoading}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </form>
           </div>
-          <div>
-            <label htmlFor="priority" className="block text-sm font-medium text-gray-600">
-              Priority
-            </label>
-            <Input
-              id="priority"
-              type="text"
-              name="priority"
-              value={formData.priority}
-              onChange={handleInputChange}
-              className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="services" className="block text-sm font-medium text-gray-600">
-              Services
-            </label>
-            <Textarea
-              id="services"
-              name="services"
-              value={formData.services}
-              onChange={handleInputChange}
-              className="mt-2 w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-blue-400"
-              rows={4}
-              required
-            />
-          </div>
-          <div className="flex space-x-4">
-            <Button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-              disabled={submitLoading}
-            >
-              {submitLoading ? 'Saving...' : editingId ? 'Update Option' : 'Add Option'}
-            </Button>
-            {editingId && (
-              <Button
-                type="button"
-                variant="secondary"
-                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition"
-                onClick={handleCancelEdit}
-                disabled={submitLoading}
-              >
-                Cancel
-              </Button>
-            )}
-          </div>
-        </form>
+        )}
       </div>
 
       <div className="mb-12">
@@ -315,6 +332,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
               <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Status</th>
               <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Created At</th>
               <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Updated At</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">chat</th>
             </tr>
           </thead>
           <tbody>
@@ -350,9 +368,9 @@ const Support = ({ tickets: initialTickets = [] }) => {
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="canceled">Canceled</SelectItem>
-                        <SelectItem value="complete">Complete</SelectItem>
+                        <SelectItem value="pending">Processing</SelectItem>
+                        <SelectItem value="canceled">Cancelled</SelectItem>
+                        <SelectItem value="complete">Completed</SelectItem>
                       </SelectContent>
                     </Select>
                   </td>
@@ -362,6 +380,8 @@ const Support = ({ tickets: initialTickets = [] }) => {
                   <td className="py-3 px-6 border-b text-gray-700">
                     {ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : 'N/A'}
                   </td>
+                  <td className="py-3 px-6 border-b text-gray-700"><a href={`/messages`}>Chat</a></td>
+
                 </tr>
               ))
             ) : (
@@ -429,6 +449,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 };
 
