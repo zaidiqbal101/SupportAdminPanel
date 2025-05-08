@@ -12,6 +12,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::where('role', 'user')->get(['id', 'name', 'email']);
+        
         return Inertia::render('Admin/ManageUsers', ['users' => $users]);
     }
 
@@ -32,7 +33,7 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'user',
+            'role' => $request->role
         ]);
 
         return redirect()->route('admin.users.index')->with('flash', ['success' => 'User created successfully']);

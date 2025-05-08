@@ -16,8 +16,8 @@ export default function ManageUsers({ users }) {
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
-            <h1 className="text-3xl font-bold mb-4">Manage Users</h1>
-            <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-4">Existing Users</h1>
+            {/* <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Create User</h2>
                 <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow-md">
                     <div className="mb-4">
@@ -54,7 +54,7 @@ export default function ManageUsers({ users }) {
                         Create User
                     </button>
                 </form>
-            </div>
+            </div> */}
             <div>
                 <h2 className="text-xl font-semibold mb-2">Existing Users</h2>
                 <ul className="bg-white p-4 rounded shadow-md">

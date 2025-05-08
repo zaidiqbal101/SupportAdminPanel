@@ -40,6 +40,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
   const [statusLoading, setStatusLoading] = useState(false);
   const [tickets, setTickets] = useState(initialTickets);
   const [isFormOpen, setIsFormOpen] = useState(false); // State for collapsible form
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false); // State for collapsible options
 
   useEffect(() => {
     let isMounted = true;
@@ -263,56 +264,66 @@ const Support = ({ tickets: initialTickets = [] }) => {
       </div>
 
       <div className="mb-12">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-6">Dynamic Options</h2>
-        {loading ? (
-          <p className="text-gray-500">Loading options...</p>
-        ) : (
-          <div className="overflow-x-auto rounded-xl shadow-lg">
-            <table className="min-w-full bg-white border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">ID</th>
-                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Department</th>
-                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Priority</th>
-                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Services</th>
-                  <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {options.length > 0 ? (
-                  options.map((option) => (
-                    <tr key={option.id} className="hover:bg-gray-50 transition">
-                      <td className="py-3 px-6 border-b text-gray-700">{option.id}</td>
-                      <td className="py-3 px-6 border-b text-gray-700">{option.department || 'N/A'}</td>
-                      <td className="py-3 px-6 border-b text-gray-700">{option.priority || 'N/A'}</td>
-                      <td className="py-3 px-6 border-b text-gray-700">{option.services || 'N/A'}</td>
-                      <td className="py-3 px-6 border-b">
-                        <Button
-                          variant="link"
-                          onClick={() => handleEdit(option)}
-                          className="text-blue-600 hover:text-blue-800 mr-4"
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="link"
-                          onClick={() => handleDelete(option.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Delete
-                        </Button>
-                      </td>
+        <Button
+          onClick={() => setIsOptionsOpen(!isOptionsOpen)}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition mb-4"
+        >
+          {isOptionsOpen ? 'Hide Dynamic Options' : 'Show Dynamic Options'}
+        </Button>
+        {isOptionsOpen && (
+          <div className="bg-white p-8 rounded-xl shadow-lg transition-all duration-300">
+            <h2 className="text-2xl font-semibold text-gray-700 mb-6">Dynamic Options</h2>
+            {loading ? (
+              <p className="text-gray-500">Loading options...</p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl shadow-lg">
+                <table className="min-w-full bg-white border border-gray-200">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">ID</th>
+                      <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Department</th>
+                      <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Priority</th>
+                      <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Services</th>
+                      <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Actions</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="py-3 px-6 text-center text-gray-500">
-                      No options found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {options.length > 0 ? (
+                      options.map((option) => (
+                        <tr key={option.id} className="hover:bg-gray-50 transition">
+                          <td className="py-3 px-6 border-b text-gray-700">{option.id}</td>
+                          <td className="py-3 px-6 border-b text-gray-700">{option.department || 'N/A'}</td>
+                          <td className="py-3 px-6 border-b text-gray-700">{option.priority || 'N/A'}</td>
+                          <td className="py-3 px-6 border-b text-gray-700">{option.services || 'N/A'}</td>
+                          <td className="py-3 px-6 border-b">
+                            <Button
+                              variant="link"
+                              onClick={() => handleEdit(option)}
+                              className="text-blue-600 hover:text-blue-800 mr-4"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="link"
+                              onClick={() => handleDelete(option.id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="py-3 px-6 text-center text-gray-500">
+                          No options found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -332,7 +343,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
               <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Status</th>
               <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Created At</th>
               <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Updated At</th>
-              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">chat</th>
+              <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Chat</th>
             </tr>
           </thead>
           <tbody>
@@ -381,12 +392,11 @@ const Support = ({ tickets: initialTickets = [] }) => {
                     {ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : 'N/A'}
                   </td>
                   <td className="py-3 px-6 border-b text-gray-700"><a href={`/messages`}>Chat</a></td>
-
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="10" className="py-3 px-6 text-center text-gray-500">
+                <td colSpan="11" className="py-3 px-6 text-center text-gray-500">
                   No tickets found
                 </td>
               </tr>
