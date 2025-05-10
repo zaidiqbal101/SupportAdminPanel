@@ -58,14 +58,14 @@ const TicketsPage = ({ tickets: initialTickets = [] }) => {
       <Navbar />
       <div className="container mx-auto p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Support Tickets</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Support Tickets1</h1>
 
         <div className="overflow-x-auto rounded-xl shadow-lg">
           <h2 className="text-2xl font-semibold text-gray-700 mb-6">Tickets</h2>
           <table className="min-w-full bg-white border border-gray-200">
             <thead>
               <tr className="bg-gray-100">
-                <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">ID</th>
+                <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">IDs</th>
                 <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Subject</th>
                 <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Department</th>
                 <th className="py-3 px-6 border-b text-left text-sm font-semibold text-gray-600">Priority</th>
