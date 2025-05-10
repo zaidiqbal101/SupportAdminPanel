@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import SidebarLayout from '@/components/SidebarLayout';
+import Navbar from '@/Components/Navbar';
 
-const MessageField = ({userId}) => {
-  console.log("Current user ID:", userId);
+const MessageField = ({messages11}) => {
+  console.log("Current user ID:", messages11);
   
   const [messages, setMessages] = useState([]);
   const [messageContent, setMessageContent] = useState('');
@@ -64,8 +66,8 @@ const MessageField = ({userId}) => {
     
     setLoading(true);
     try {
-      const response = await axios.post(`/messages`, {
-        user_id: userId,
+      const response = await axios.post(`/messages/${messages11.id}`, {
+        user_id: messages11,
         content: messageContent,
       }, {
         headers: {
@@ -130,8 +132,11 @@ const MessageField = ({userId}) => {
   };
 
   return (
+    <>
+      <Navbar />
+      <SidebarLayout>
     <div className="message-field-container">
-      <h2 className="text-xl font-bold mb-4">Messages</h2>
+      <h2 className="text-xl font-bold mb-4">Messages1</h2>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -225,6 +230,8 @@ const MessageField = ({userId}) => {
         )}
       </div>
     </div>
+    </SidebarLayout>
+    </>
   );
 };
 

@@ -20,6 +20,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import SidebarLayout from '../components/SidebarLayout';
+
 
 const Support = ({ tickets: initialTickets = [] }) => {
   const [formData, setFormData] = useState({
@@ -139,14 +141,22 @@ const Support = ({ tickets: initialTickets = [] }) => {
       setLoading(false);
     }
   };
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
   const updateTicketStatus = async (ticketId, status, statusMessage) => {
     setStatusLoading(true);
     try {
-      const response = await axios.put(`/tickets/${ticketId}/status`, {
-        status,
-        statusMessage,
-      });
+      
+      const response = await axios.put(
+  `/tickets/${ticketId}/status`,
+  { status, statusMessage },
+  {
+    headers: {
+      'X-CSRF-TOKEN': csrfToken,
+    },
+  }
+
+    );
       const updatedTicket = response.data.ticket;
       setTickets((prev) =>
         prev.map((ticket) =>
@@ -178,10 +188,12 @@ const Support = ({ tickets: initialTickets = [] }) => {
 
   return (
     <>
+    
     <Navbar />
+    <SidebarLayout>
     <div className="container mx-auto p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Support Tickets</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Support Tickets1</h1>
 
       <div className="mb-12">
         <Button
@@ -391,7 +403,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
                   <td className="py-3 px-6 border-b text-gray-700">
                     {ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : 'N/A'}
                   </td>
-                  <td className="py-3 px-6 border-b text-gray-700"><a href={`/messages`}>Chat</a></td>
+                  <td className="py-3 px-6 border-b text-gray-700"><a href={`/messages/${ticket.id}`}>Chat</a></td>
                 </tr>
               ))
             ) : (
@@ -459,6 +471,7 @@ const Support = ({ tickets: initialTickets = [] }) => {
         </DialogContent>
       </Dialog>
     </div>
+    </SidebarLayout>
     </>
   );
 };

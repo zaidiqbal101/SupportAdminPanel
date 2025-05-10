@@ -14,16 +14,17 @@ class MessageController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($id)
     {
         // dump(Auth::id());
+        // dd($id);
 
-        $messages = Message::where('user_id', Auth::id())
+        $messages = Message::where('user_id', $id)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
             
             return Inertia::render('MessageField', [
-                'messages' => $messages,
+                'messages11' => $messages,
             ]);
     }
 
@@ -35,6 +36,7 @@ class MessageController extends Controller
      */
     public function store(Request $request)
     {
+        // dd( $request->user_id);
         $validated = $request->validate([
             'content' => 'required|string|max:1000',
         ]);

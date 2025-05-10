@@ -10,6 +10,8 @@ export default {
     './resources/views/**/*.blade.php',
     // React JSX, JS, TS, and TSX files
     './resources/js/**/*.{js,jsx,ts,tsx}',
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
 
   theme: {

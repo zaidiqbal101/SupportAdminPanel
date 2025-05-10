@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Inertia } from '@inertiajs/inertia';
+import SidebarLayout from '@/components/SidebarLayout';
+import Navbar from '@/Components/Navbar';
+
 
 export default function ManageUsers({ users }) {
     const [form, setForm] = useState({
@@ -15,6 +18,7 @@ export default function ManageUsers({ users }) {
     };
 
     return (
+        
         <div className="min-h-screen bg-gray-100 p-6">
             <h1 className="text-3xl font-bold mb-4">Manage Users</h1>
             <div className="mb-6">
@@ -56,7 +60,7 @@ export default function ManageUsers({ users }) {
                 </form>
             </div>
             <div>
-                <h2 className="text-xl font-semibold mb-2">Existing Users</h2>
+                <h2 className="text-xl font-semibold mb-2">Existing Users1</h2>
                 <ul className="bg-white p-4 rounded shadow-md">
                     {users.map((user) => (
                         <li key={user.id} className="py-2 border-b">
@@ -66,5 +70,7 @@ export default function ManageUsers({ users }) {
                 </ul>
             </div>
         </div>
+        </SidebarLayout>
+        </>
     );
 }

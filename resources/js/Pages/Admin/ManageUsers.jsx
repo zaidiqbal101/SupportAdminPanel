@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Inertia } from '@inertiajs/inertia';
+import SidebarLayout from '@/components/SidebarLayout';
+import Navbar from '@/Components/Navbar';
 
 export default function ManageUsers({ users }) {
     const [form, setForm] = useState({
@@ -15,8 +17,11 @@ export default function ManageUsers({ users }) {
     };
 
     return (
+        <>
+         <Navbar />
+        <SidebarLayout>
         <div className="min-h-screen bg-gray-100 p-6">
-            <h1 className="text-3xl font-bold mb-4">Existing Users</h1>
+            <h1 className="text-3xl font-bold mb-4">Existing Users1</h1>
             {/* <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Create User</h2>
                 <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow-md">
@@ -66,5 +71,7 @@ export default function ManageUsers({ users }) {
                 </ul>
             </div>
         </div>
+        </SidebarLayout>
+        </>
     );
 }

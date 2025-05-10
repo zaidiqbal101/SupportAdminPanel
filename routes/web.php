@@ -19,9 +19,10 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('admin.users.index');
 
 Route::prefix('admin')->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Admin/Dashboard');
-    })->name('admin.dashboard');
+    // Route::get('/', function () {
+    //     return Inertia::render('Admin/Dashboard');
+    // })->name('admin.dashboard');
+    Route::get('/support', [TicketController::class, 'support'])->name('support'); 
 
     Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::get('/register', [UserController::class, 'create'])->name('admin.register');
@@ -34,15 +35,18 @@ Route::middleware(['auth', 'role:user'])->prefix('user')->group(function () {
     })->name('user.dashboard');
 });
 
-Route::get('/', [TicketController::class, 'support'])->name('support'); 
+// Route::get('/', [TicketController::class, 'support'])->name('support'); 
+Route::get('/', function () {
+        return Inertia::render('Admin/Dashboard');
+    });
 Route::put('/tickets/{ticketId}/status', [TicketController::class, 'updateStatus']);
 Route::get('/test',function (){
     return Inertia::render('test');
 });
 // Route::post('/dynamicoptions', [TicketController::class, 'storeDynamicOption']);
 
-    Route::get('/messages', [App\Http\Controllers\MessageController::class, 'index']);
-    Route::post('/messages', [App\Http\Controllers\MessageController::class, 'store']);
+    Route::get('/messages/{id}', [App\Http\Controllers\MessageController::class, 'index']);
+    Route::post('/messages/{id}', [App\Http\Controllers\MessageController::class, 'store']);
     Route::get('/messages/{message}', [App\Http\Controllers\MessageController::class, 'show']);
     Route::put('/messages/{message}', [App\Http\Controllers\MessageController::class, 'update']);
     Route::patch('/messages/{message}', [App\Http\Controllers\MessageController::class, 'update']);
