@@ -44,12 +44,15 @@ Quick tasks accessible via `Ctrl+Shift+B` (or `Cmd+Shift+B` on Mac):
 - **Serve Laravel**: Start the Laravel development server
 - **Run Vite Dev Server**: Start Vite for frontend asset compilation
 - **Build Assets**: Compile production assets
-- **Run All Services**: Start Laravel, Queue, and Vite together
-- **Run Tests**: Execute PHPUnit/Pest tests
-- **Laravel Pint**: Code formatting and style checking
+- **Run All Services (Dev)**: Runs `composer dev` script (starts Laravel server, queue listener, and Vite)
+- **Run PHPUnit Tests**: Execute tests via `php artisan test`
+- **Run Pest Tests**: Execute tests via `vendor/bin/pest`
+- **Laravel Pint (Fix)**: Auto-fix code style issues
+- **Laravel Pint (Test)**: Check code style without making changes
 - **Clear Cache**: Clear all Laravel caches
 - **Install Dependencies**: Install both Composer and NPM dependencies
 - **Run Migrations**: Execute database migrations
+- **Fresh Migrate with Seed**: Reset database and run seeders
 
 ## Using Tasks
 
@@ -78,7 +81,7 @@ You can customize these settings by:
 
 - **Quick File Navigation**: `Ctrl+P` (or `Cmd+P`) to quickly open files
 - **Command Palette**: `Ctrl+Shift+P` (or `Cmd+Shift+P`) for all commands
-- **Terminal**: `Ctrl+`` (or `Cmd+``) to open integrated terminal
+- **Terminal**: Press `Ctrl` and backtick key together (or `Cmd` and backtick) to open integrated terminal
 - **Multi-cursor**: `Alt+Click` to place multiple cursors
 - **Format Document**: `Shift+Alt+F` to format the current file
 
